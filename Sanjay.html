@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TranspoX — Vehicle Booking (Single File)</title>
+  <style>
+    :root{
+      --bg:#0b1220; --card:#111a2d; --muted:#1b2540; --text:#e6ecff; --text-dim:#b8c6ff;
+      --primary:#6c8cff; --accent:#7ce2ce; --warn:#ffdd57; --danger:#ff7b7b; --ok:#7bffa0;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, sans-serif;background:linear-gradient(120deg,var(--bg),#060913);color:var(--text)}
+    a{color:var(--primary);text-decoration:none}
+    .container{max-width:1100px;margin:0 auto;padding:20px}
+    header{position:sticky;top:0;background:rgba(11,18,32,.8);backdrop-filter: blur(8px);z-index:10;border-bottom:1px solid #1a2540}
+    .nav{display:flex;align-items:center;justify-content:space-between;padding:14px 20px}
+    .brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.3px}
+    .brand .logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--primary),var(--accent));box-shadow:var(--shadow)}
+    .nav-links{display:flex;gap:14px;flex-wrap:wrap}
+    .btn{cursor:pointer;border:none;border-radius:14px;padding:10px 14px;background:var(--primary);color:#081022;font-weight:700;box-shadow:var(--shadow)}
+    .btn.ghost{background:transparent;color:var(--text);border:1px solid #25345d}
+    .btn.warn{background:var(--warn);color:#1a1500}
+    .btn.danger{background:var(--danger);color:#210909}
+    .tag{padding:4px 10px;border-radius:999px;background:#25345d;font-size:.8rem;color:var(--text-dim)}
+
+    .grid{display:grid;gap:18px}
+    .grid.cols-2{grid-template-columns: repeat(2,1fr)}
+    .grid.cols-3{grid-template-columns: repeat(3,1fr)}
+    @media(max-width:900px){.grid.cols-2,.grid.cols-3{grid-template-columns:1fr}}
+
+    .card{background:var(--card);border:1px solid var(--muted);border-radius:18px;padding:18px;box-shadow:var(--shadow)}
+    .card h2,.card h3{margin:.2rem 0 0.6rem}
+    .muted{color:var(--text-dim)}
+    input,select,textarea{width:100%;padding:12px 12px;border-radius:12px;border:1px solid #2a3a66;background:#0d1424;color:var(--text)}
+    label{font-size:.9rem;color:var(--text-dim)}
+    .row{display:flex;gap:12px;flex-wrap:wrap}
+    .row>*{flex:1}
+    table{width:100%;border-collapse:collapse}
+    th,td{border-bottom:1px solid #28355f;padding:10px;text-align:left}
+    th{color:#a9b8ff;font-weight:700}
+    tr:hover{background:#101a31}
+    .right{display:flex;justify-content:flex-end;gap:10px}
+    .hidden{display:none !important}
+
+    .tabs{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+    .tab{padding:8px 12px;border-radius:12px;border:1px solid #2a3a66;color:var(--text-dim);cursor:pointer}
+    .tab.active{background:var(--primary);color:#0b1220;border-color:transparent}
+
+    .hero{padding:50px 20px;text-align:center}
+    .hero h1{font-size:clamp(24px,4vw,40px);margin:0 0 10px}
+    .hero p{color:var(--text-dim);margin:0 0 16px}
+    .pill{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;background:#122044;border:1px solid #26386b;color:var(--text-dim)}
+
+    .status{padding:4px 10px;border-radius:999px;font-size:.8rem;display:inline-block}
+    .s-new{background:#2c3b6c;color:#cfe1ff}
+    .s-assigned{background:#2b5c43;color:#dcffe9}
+    .s-ontheway{background:#6c5a21;color:#fff3c7}
+    .s-completed{background:#285c2c;color:#d8ffe0}
+    .s-cancelled{background:#5c2828;color:#ffd8d8}
+
+    footer{padding:40px 20px;color:#7b8dd6;border-top:1px solid #1a2540;text-align:center}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="nav container">
+      <div class="brand"><div class="logo"></div> TranspoX</div>
+      <div class="nav-links">
+        <button class="btn ghost" data-link="home">Home</button>
+        <button class="btn ghost" data-link="customer">Customer</button>
+        <button class="btn ghost" data-link="partner">Partner</button>
+        <button class="btn ghost" data-link="admin">Admin</button>
+        <button class="btn" id="logoutBtn" title="Sign out">Logout</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- HOME -->
+  <section class="container" data-route="home">
+    <div class="hero card">
+      <span class="pill">Single-file demo • LocalStorage • No backend</span>
+      <h1>Book reliable rides for people & goods</h1>
+      <p>Professional vehicle booking for transport. Calculate fare by distance, manage bookings, and coordinate partners — all from one page.</p>
+      <div class="row right" style="justify-content:center">
+        <button class="btn" data-link="customer">Book a Ride</button>
+        <button class="btn ghost" data-link="partner">Partner Login</button>
+        <button class="btn ghost" data-link="admin">Admin Panel</button>
+      </div>
+    </div>
+
+    <div class="grid cols-3">
+      <div class="card">
+        <h3>How fare is calculated</h3>
+        <p class="muted">Base fare + (per‑km × distance) × surge. Admin can set these values in Settings.</p>
+        <ul>
+          <li>Base fare (default ₹50)</li>
+          <li>Per‑km (default ₹12)</li>
+          <li>Optional surge (1.0 = no surge)</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Distance options</h3>
+        <p class="muted">Enter your own distance (km) or let us estimate using pickup/drop coordinates (Haversine).</p>
+        <ul>
+          <li>Manual distance input</li>
+          <li>Coordinate-based estimate</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Quick demo accounts</h3>
+        <p class="muted">Use these to explore:</p>
+        <ul>
+          <li><b>Admin</b>: admin@demo.com / admin123</li>
+          <li><b>Partner</b>: partner@demo.com / partner123</li>
+          <li><b>Customer</b>: customer@demo.com / customer123</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- CUSTOMER AUTH & BOOK -->
+  <section class="container hidden" data-route="customer">
+    <div class="grid cols-2">
+      <div class="card" id="customerAuthCard">
+        <h2>Customer Login / Register</h2>
+        <div class="row">
+          <div>
+            <label>Email</label>
+            <input id="custEmail" placeholder="you@example.com" />
+          </div>
+          <div>
+            <label>Password</label>
+            <input id="custPass" type="password" placeholder="••••••••" />
+          </div>
+        </div>
+        <div class="row right">
+          <button class="btn ghost" id="custRegister">Register</button>
+          <button class="btn" id="custLogin">Login</button>
+        </div>
+      </div>
+
+      <div class="card hidden" id="customerBookCard">
+        <div class="row" style="align-items:center;justify-content:space-between">
+          <h2>Book a Vehicle</h2>
+          <span class="tag" id="custWelcome"></span>
+        </div>
+        <div class="row">
+          <div><label>Pickup</label><input id="pickup" placeholder="Pickup address"/></div>
+          <div><label>Drop</label><input id="drop" placeholder="Drop address"/></div>
+        </div>
+        <div class="row">
+          <div><label>Date & Time</label><input id="when" type="datetime-local"/></div>
+          <div><label>Passengers</label><input id="passengers" type="number" min="1" value="1"/></div>
+        </div>
+        <div class="row">
+          <div>
+            <label>Vehicle Type</label>
+            <select id="vehicleType"></select>
+          </div>
+          <div>
+            <label>Distance (km) — manual</label>
+            <input id="distManual" type="number" min="0" step="0.1" placeholder="Optional if using coordinates"/>
+          </div>
+        </div>
+        <details class="card" style="background:#0f1830;border-color:#23325b;margin:14px 0">
+          <summary class="muted">Or estimate by coordinates (Haversine)</summary>
+          <div class="row">
+            <div><label>Pickup Lat</label><input id="plat" type="number" step="any" placeholder="12.9716"/></div>
+            <div><label>Pickup Lng</label><input id="plng" type="number" step="any" placeholder="77.5946"/></div>
+          </div>
+          <div class="row">
+            <div><label>Drop Lat</label><input id="dlat" type="number" step="any" placeholder="13.0827"/></div>
+            <div><label>Drop Lng</label><input id="dlng" type="number" step="any" placeholder="80.2707"/></div>
+          </div>
+          <div class="row right"><button class="btn ghost" id="estimateBtn">Estimate Distance</button></div>
+          <p class="muted" id="estimateOut"></p>
+        </details>
+
+        <div class="row">
+          <div><label>Estimated Fare (₹)</label><input id="fare" disabled/></div>
+          <div class="right"><button class="btn warn" id="calcFare">Calculate Fare</button></div>
+        </div>
+        <div class="right">
+          <button class="btn" id="placeBooking">Place Booking</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card hidden" id="customerBookingsCard">
+      <h3>My Bookings</h3>
+      <table id="custBookingsTbl"><thead>
+        <tr><th>#</th><th>Pickup → Drop</th><th>When</th><th>Vehicle</th><th>Km</th><th>Fare</th><th>Status</th></tr>
+      </thead><tbody></tbody></table>
+    </div>
+  </section>
+
+  <!-- PARTNER -->
+  <section class="container hidden" data-route="partner">
+    <div class="card" id="partnerAuthCard">
+      <h2>Partner Login</h2>
+      <div class="row">
+        <div><label>Email</label><input id="partEmail" placeholder="partner@demo.com"/></div>
+        <div><label>Password</label><input id="partPass" type="password" placeholder="••••••••"/></div>
+      </div>
+      <div class="row right">
+        <button class="btn" id="partLogin">Login</button>
+      </div>
+    </div>
+
+    <div class="card hidden" id="partnerDash">
+      <div class="row" style="align-items:center;justify-content:space-between">
+        <h2>Partner Dashboard</h2>
+        <span class="tag" id="partnerWelcome"></span>
+      </div>
+      <table id="partnerJobs"><thead>
+        <tr><th>#</th><th>Pickup → Drop</th><th>When</th><th>Customer</th><th>Km</th><th>Fare</th><th>Status</th><th>Action</th></tr>
+      </thead><tbody></tbody></table>
+    </div>
+  </section>
+
+  <!-- ADMIN -->
+  <section class="container hidden" data-route="admin">
+    <div class="card" id="adminAuthCard">
+      <h2>Admin Login</h2>
+      <div class="row">
+        <div><label>Email</label><input id="adminEmail" value="admin@demo.com"/></div>
+        <div><label>Password</label><input id="adminPass" type="password" placeholder="admin123"/></div>
+      </div>
+      <div class="row right"><button class="btn" id="adminLogin">Login</button></div>
+    </div>
+
+    <div class="card hidden" id="adminPanel">
+      <div class="row" style="align-items:center;justify-content:space-between">
+        <h2>Admin Panel</h2>
+        <span class="tag" id="adminWelcome"></span>
+      </div>
+
+      <div class="tabs">
+        <div class="tab active" data-tab="dash">Dashboard</div>
+        <div class="tab" data-tab="users">Users</div>
+        <div class="tab" data-tab="vehicles">Vehicles</div>
+        <div class="tab" data-tab="partners">Partners</div>
+        <div class="tab" data-tab="bookings">Bookings</div>
+        <div class="tab" data-tab="settings">Settings</div>
+      </div>
+
+      <div class="tabview" data-tabview="dash">
+        <div class="grid cols-3">
+          <div class="card"><h3>Total Users</h3><div id="statUsers" class="hero" style="padding:10px 0;font-size:34px">0</div></div>
+          <div class="card"><h3>Total Partners</h3><div id="statPartners" class="hero" style="padding:10px 0;font-size:34px">0</div></div>
+          <div class="card"><h3>Total Bookings</h3><div id="statBookings" class="hero" style="padding:10px 0;font-size:34px">0</div></div>
+        </div>
+      </div>
+
+      <div class="tabview hidden" data-tabview="users">
+        <div class="row">
+          <div class="card" style="flex:2">
+            <h3>All Users</h3>
+            <table id="usersTbl"><thead><tr><th>#</th><th>Name</th><th>Email</th><th>Role</th></tr></thead><tbody></tbody></table>
+          </div>
+          <div class="card" style="flex:1">
+            <h3>Create User</h3>
+            <div class="row"><div><label>Name</label><input id="newUName"></div></div>
+            <div class="row"><div><label>Email</label><input id="newUEmail"></div></div>
+            <div class="row"><div><label>Password</label><input id="newUPass" type="password"></div></div>
+            <div class="row"><div>
+              <label>Role</label>
+              <select id="newURole"><option>customer</option><option>partner</option><option>admin</option></select>
+            </div></div>
+            <div class="row right"><button class="btn" id="createUserBtn">Create</button></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tabview hidden" data-tabview="vehicles">
+        <div class="row">
+          <div class="card" style="flex:1">
+            <h3>Add Vehicle Type</h3>
+            <div class="row"><div><label>Name</label><input id="vName" placeholder="Mini, Sedan, Truck"/></div></div>
+            <div class="row"><div><label>Capacity</label><input id="vCap" type="number" min="1" value="4"/></div></div>
+            <div class="row right"><button class="btn" id="addVehicle">Add</button></div>
+          </div>
+          <div class="card" style="flex:2">
+            <h3>Vehicle Types</h3>
+            <table id="vehiclesTbl"><thead><tr><th>#</th><th>Name</th><th>Capacity</th><th>Action</th></tr></thead><tbody></tbody></table>
+          </div>
+        </div>
+      </div>
+
+      <div class="tabview hidden" data-tabview="partners">
+        <div class="row">
+          <div class="card" style="flex:2">
+            <h3>Partners</h3>
+            <table id="partnersTbl"><thead><tr><th>#</th><th>Name</th><th>Email</th></tr></thead><tbody></tbody></table>
+          </div>
+          <div class="card" style="flex:1">
+            <h3>Invite Partner</h3>
+            <div class="row"><div><label>Name</label><input id="pName"></div></div>
+            <div class="row"><div><label>Email</label><input id="pEmail"></div></div>
+            <div class="row"><div><label>Password</label><input id="pPass" type="password"></div></div>
+            <div class="row right"><button class="btn" id="invitePartner">Create Partner</button></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tabview hidden" data-tabview="bookings">
+        <h3>All Bookings</h3>
+        <table id="bookingsTbl"><thead>
+          <tr><th>#</th><th>Customer</th><th>Pickup → Drop</th><th>When</th><th>Vehicle</th><th>Km</th><th>Fare</th><th>Status</th><th>Partner</th><th>Assign</th></tr>
+        </thead><tbody></tbody></table>
+      </div>
+
+      <div class="tabview hidden" data-tabview="settings">
+        <div class="grid cols-2">
+          <div class="card">
+            <h3>Fare Settings</h3>
+            <div class="row"><div><label>Base Fare (₹)</label><input id="baseFare" type="number" min="0" value="50"/></div></div>
+            <div class="row"><div><label>Per‑km (₹)</label><input id="perKm" type="number" min="0" value="12"/></div></div>
+            <div class="row"><div><label>Surge Multiplier</label><input id="surge" type="number" min="1" step="0.1" value="1"/></div></div>
+            <div class="row right"><button class="btn" id="saveFare">Save</button></div>
+          </div>
+          <div class="card">
+            <h3>Danger Zone</h3>
+            <p class="muted">Export or reset all demo data stored in your browser.</p>
+            <div class="row right">
+              <button class="btn ghost" id="exportData">Export JSON</button>
+              <button class="btn danger" id="resetAll">Reset All</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <footer>
+    TranspoX demo • Single HTML file • Uses LocalStorage • © 2025
+  </footer>
+
+  <script>
+  /******************** UTIL & STORAGE ********************/
+  const $ = (sel,ctx=document)=>ctx.querySelector(sel);
+  const $$ = (sel,ctx=document)=>Array.from(ctx.querySelectorAll(sel));
+  const storage = {
+    get(){
+      const raw = localStorage.getItem('transpox');
+      if(!raw){
+        const seed = {
+          settings:{baseFare:50, perKm:12, surge:1},
+          users:[
+            {id:1,name:'Admin',email:'admin@demo.com',pass:'admin123',role:'admin'},
+            {id:2,name:'Partner One',email:'partner@demo.com',pass:'partner123',role:'partner'},
+            {id:3,name:'Customer One',email:'customer@demo.com',pass:'customer123',role:'customer'}
+          ],
+          vehicles:[
+            {id:1,name:'Mini',cap:3},
+            {id:2,name:'Sedan',cap:4},
+            {id:3,name:'SUV',cap:6},
+            {id:4,name:'Pickup Truck',cap:2},
+            {id:5,name:'Cargo Van',cap:2}
+          ],
+          bookings:[]
+        };
+        localStorage.setItem('transpox', JSON.stringify(seed));
+        return seed;
+      }
+      return JSON.parse(raw);
+    },
+    set(data){ localStorage.setItem('transpox', JSON.stringify(data)); },
+    reset(){ localStorage.removeItem('transpox'); location.reload(); }
+  };
+  let DB = storage.get();
+
+  function save(){ storage.set(DB); refreshUI(); }
+
+  function uid(list){ return (list.reduce((m,x)=>Math.max(m,x.id),0)||0)+1; }
+
+  function toast(msg){
+    const t = document.createElement('div');
+    t.textContent = msg; t.style.position='fixed'; t.style.bottom='20px'; t.style.left='50%'; t.style.transform='translateX(-50%)'; t.style.background='#0f1830'; t.style.border='1px solid #2a3a66'; t.style.padding='10px 14px'; t.style.borderRadius='12px'; t.style.boxShadow='var(--shadow)'; t.style.zIndex=99;
+    document.body.appendChild(t); setTimeout(()=>t.remove(),2200);
+  }
+
+  /******************** ROUTER & AUTH STATE ********************/
+  const state = { user:null }; // {id,name,email,role}
+
+  function showRoute(name){
+    $$('[data-route]').forEach(s=>s.classList.add('hidden'));
+    const target = `[data-route="${name}"]`;
+    const el = document.querySelector(target);
+    if(el) el.classList.remove('hidden');
+    history.replaceState({}, '', `#${name}`);
+  }
+
+  function setUser(u){ state.user = u; $('#logoutBtn').style.display = u? 'inline-flex':'none'; refreshUI(); }
+  $('#logoutBtn').addEventListener('click', ()=>{ setUser(null); showRoute('home'); toast('Logged out'); });
+
+  // nav links
+  $$('.nav [data-link]').forEach(btn=>btn.addEventListener('click',()=>{
+    const to = btn.dataset.link; showRoute(to);
+  }));
+
+  /******************** AUTH FLOWS ********************/
+  // Customer login/register
+  $('#custLogin').addEventListener('click', ()=>{
+    const email = $('#custEmail').value.trim(); const pass = $('#custPass').value;
+    const u = DB.users.find(u=>u.email===email && u.pass===pass && u.role==='customer');
+    if(u){ setUser(u); toast('Customer logged in'); showCustomerUI(); showRoute('customer'); }
+    else toast('Invalid credentials.');
+  });
+  $('#custRegister').addEventListener('click', ()=>{
+    const email = $('#custEmail').value.trim(); const pass = $('#custPass').value; if(!email||!pass) return toast('Enter email & password');
+    if(DB.users.some(u=>u.email===email)) return toast('Email already exists');
+    const u = {id:uid(DB.users), name: email.split('@')[0], email, pass, role:'customer'};
+    DB.users.push(u); save(); setUser(u); toast('Registered & logged in'); showCustomerUI(); showRoute('customer');
+  });
+
+  // Partner login
+  $('#partLogin').addEventListener('click', ()=>{
+    const email = $('#partEmail').value.trim(); const pass = $('#partPass').value;
+    const u = DB.users.find(u=>u.email===email && u.pass===pass && u.role==='partner');
+    if(u){ setUser(u); toast('Partner logged in'); showPartnerUI(); showRoute('partner'); }
+    else toast('Invalid credentials.');
+  });
+
+  // Admin login
+  $('#adminLogin').addEventListener('click', ()=>{
+    const email = $('#adminEmail').value.trim(); const pass = $('#adminPass').value;
+    const u = DB.users.find(u=>u.email===email && u.pass===pass && u.role==='admin');
+    if(u){ setUser(u); toast('Admin logged in'); showAdminUI(); showRoute('admin'); }
+    else toast('Invalid credentials.');
+  });
+
+  /******************** CUSTOMER BOOKING ********************/
+  function populateVehicleTypes(){
+    const sel = $('#vehicleType'); sel.innerHTML = '';
+    DB.vehicles.forEach(v=>{
+      const o = document.createElement('option'); o.value = v.name; o.textContent = `${v.name} (cap ${v.cap})`; sel.appendChild(o);
+    });
+  }
+  function showCustomerUI(){
+    if(!state.user || state.user.role!=='customer'){ $('#customerAuthCard').classList.remove('hidden'); $('#customerBookCard').classList.add('hidden'); $('#customerBookingsCard').classList.add('hidden'); return; }
+    $('#customerAuthCard').classList.add('hidden');
+    $('#customerBookCard').classList.remove('hidden');
+    $('#customerBookingsCard').classList.remove('hidden');
+    $('#custWelcome').textContent = `Hello, ${state.user.name}`;
+    populateVehicleTypes();
+    renderCustomerBookings();
+  }
+
+  function haversine(lat1,lon1,lat2,lon2){
+    function toRad(d){return d*Math.PI/180}
+    const R=6371; const dLat=toRad(lat2-lat1); const dLon=toRad(lon2-lon1);
+    const a=Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
+    const c=2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a)); return R*c;
+  }
+
+  $('#estimateBtn').addEventListener('click', ()=>{
+    const lat1=parseFloat($('#plat').value), lon1=parseFloat($('#plng').value), lat2=parseFloat($('#dlat').value), lon2=parseFloat($('#dlng').value);
+    if([lat1,lon1,lat2,lon2].some(x=>Number.isNaN(x))) return toast('Enter all four coordinates');
+    const km = haversine(lat1,lon1,lat2,lon2);
+    $('#distManual').value = km.toFixed(2);
+    $('#estimateOut').textContent = `Estimated distance: ${km.toFixed(2)} km`;
+  });
+
+  function calcFare(dist){
+    const {baseFare, perKm, surge} = DB.settings; return Math.round((baseFare + perKm*dist) * surge);
+  }
+
+  $('#calcFare').addEventListener('click', ()=>{
+    const dist = parseFloat($('#distManual').value||'0'); if(dist<=0) return toast('Enter distance in km');
+    $('#fare').value = calcFare(dist);
+  });
+
+  $('#placeBooking').addEventListener('click', ()=>{
+    if(!state.user) return toast('Login as customer');
+    const pickup=$('#pickup').value.trim(); const drop=$('#drop').value.trim(); const when=$('#when').value; const pax=parseInt($('#passengers').value||'1');
+    const type=$('#vehicleType').value; const km=parseFloat($('#distManual').value||'0');
+    if(!pickup||!drop||!when||!km) return toast('Fill pickup, drop, time & distance');
+    const fare=calcFare(km);
+    const b={
+      id: uid(DB.bookings), customerId: state.user.id, pickup, drop, when, pax, vehicleType: type, km: Number(km.toFixed(2)), fare, status:'new', partnerId: null
+    };
+    DB.bookings.push(b); save(); toast('Booking placed');
+    renderCustomerBookings(); clearBookingForm();
+  });
+
+  function clearBookingForm(){ ['pickup','drop','when','passengers','distManual','fare','plat','plng','dlat','dlng'].forEach(id=>{const el=$('#'+id); if(el) el.value='';}); $('#estimateOut').textContent=''; }
+
+  function renderCustomerBookings(){
+    const tbody = $('#custBookingsTbl tbody'); tbody.innerHTML='';
+    DB.bookings.filter(b=>b.customerId===state.user.id).forEach((b,i)=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML = `<td>${i+1}</td><td>${b.pickup} → ${b.drop}</td><td>${new Date(b.when).toLocaleString()}</td><td>${b.vehicleType}</td><td>${b.km}</td><td>₹${b.fare}</td><td>${statusChip(b.status)}</td>`;
+      tbody.appendChild(tr);
+    });
+  }
+
+  /******************** PARTNER UI ********************/
+  function showPartnerUI(){
+    if(!state.user || state.user.role!=='partner'){ $('#partnerAuthCard').classList.remove('hidden'); $('#partnerDash').classList.add('hidden'); return; }
+    $('#partnerAuthCard').classList.add('hidden'); $('#partnerDash').classList.remove('hidden');
+    $('#partnerWelcome').textContent = `Hi, ${state.user.name}`;
+    renderPartnerJobs();
+  }
+
+  function renderPartnerJobs(){
+    const tbody = $('#partnerJobs tbody'); tbody.innerHTML='';
+    DB.bookings.filter(b=>b.partnerId===state.user.id).forEach((b,i)=>{
+      const cust = DB.users.find(u=>u.id===b.customerId);
+      const tr=document.createElement('tr');
+      tr.innerHTML = `<td>${i+1}</td><td>${b.pickup} → ${b.drop}</td><td>${new Date(b.when).toLocaleString()}</td><td>${cust?.name||''}</td><td>${b.km}</td><td>₹${b.fare}</td><td>${statusChip(b.status)}</td><td>${partnerActionBtn(b)}</td>`;
+      tbody.appendChild(tr);
+      const sel = tr.querySelector('select'); if(sel){ sel.addEventListener('change',()=>{ b.status = sel.value; save(); }); }
+    });
+  }
+  function partnerActionBtn(b){
+    const opts=['new','assigned','ontheway','completed','cancelled'];
+    return `<select>${opts.map(o=>`<option ${b.status===o?'selected':''} value="${o}">${o}</option>`).join('')}</select>`;
+  }
+
+  /******************** ADMIN UI ********************/
+  function showAdminUI(){
+    if(!state.user || state.user.role!=='admin'){ $('#adminAuthCard').classList.remove('hidden'); $('#adminPanel').classList.add('hidden'); return; }
+    $('#adminAuthCard').classList.add('hidden'); $('#adminPanel').classList.remove('hidden');
+    $('#adminWelcome').textContent = `Welcome, ${state.user.name}`;
+    renderStats(); renderUsers(); renderVehicles(); renderPartners(); renderBookings(); populateVehicleTypes();
+  }
+
+  // tabs
+  $$('.tab').forEach(t=>t.addEventListener('click',()=>{
+    $$('.tab').forEach(x=>x.classList.remove('active')); t.classList.add('active');
+    const k=t.dataset.tab; $$('.tabview').forEach(v=>v.classList.add('hidden')); $(`[data-tabview="${k}"]`).classList.remove('hidden');
+  }));
+
+  function renderStats(){
+    $('#statUsers').textContent = DB.users.length;
+    $('#statPartners').textContent = DB.users.filter(u=>u.role==='partner').length;
+    $('#statBookings').textContent = DB.bookings.length;
+  }
+
+  function renderUsers(){
+    const tbody=$('#usersTbl tbody'); tbody.innerHTML='';
+    DB.users.forEach((u,i)=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML = `<td>${i+1}</td><td>${u.name}</td><td>${u.email}</td><td>${u.role}</td>`; tbody.appendChild(tr);
+    });
+  }
+
+  $('#createUserBtn').addEventListener('click',()=>{
+    const name=$('#newUName').value.trim(); const email=$('#newUEmail').value.trim(); const pass=$('#newUPass').value; const role=$('#newURole').value;
+    if(!name||!email||!pass) return toast('Fill all user fields'); if(DB.users.some(u=>u.email===email)) return toast('Email exists');
+    DB.users.push({id:uid(DB.users), name, email, pass, role}); save();
+    $('#newUName').value=$('#newUEmail').value=$('#newUPass').value='';
+  });
+
+  function renderVehicles(){
+    const tbody=$('#vehiclesTbl tbody'); tbody.innerHTML=''; DB.vehicles.forEach((v,i)=>{
+      const tr=document.createElement('tr'); tr.innerHTML = `<td>${i+1}</td><td>${v.name}</td><td>${v.cap}</td><td><button class='btn danger' data-del-veh='${v.id}'>Delete</button></td>`; tbody.appendChild(tr);
+    });
+    $$('[data-del-veh]').forEach(btn=>btn.addEventListener('click',()=>{
+      const id=Number(btn.dataset.delVeh); DB.vehicles = DB.vehicles.filter(v=>v.id!==id); save();
+    }));
+  }
+  $('#addVehicle').addEventListener('click',()=>{
+    const name=$('#vName').value.trim(); const cap=parseInt($('#vCap').value||'0'); if(!name||cap<=0) return toast('Enter valid name & capacity');
+    DB.vehicles.push({id:uid(DB.vehicles), name, cap}); save(); $('#vName').value=''; $('#vCap').value=4;
+  });
+
+  function renderPartners(){
+    const tbody=$('#partnersTbl tbody'); tbody.innerHTML='';
+    DB.users.filter(u=>u.role==='partner').forEach((p,i)=>{
+      const tr=document.createElement('tr'); tr.innerHTML=`<td>${i+1}</td><td>${p.name}</td><td>${p.email}</td>`; tbody.appendChild(tr);
+    });
+  }
+  $('#invitePartner').addEventListener('click',()=>{
+    const name=$('#pName').value.trim(); const email=$('#pEmail').value.trim(); const pass=$('#pPass').value; if(!name||!email||!pass) return toast('Fill all partner fields');
+    if(DB.users.some(u=>u.email===email)) return toast('Email exists');
+    DB.users.push({id:uid(DB.users), name, email, pass, role:'partner'}); save(); $('#pName').value=$('#pEmail').value=$('#pPass').value='';
+  });
+
+  function statusChip(s){
+    const cls = {new:'s-new',assigned:'s-assigned',ontheway:'s-ontheway',completed:'s-completed',cancelled:'s-cancelled'}[s]||'s-new';
+    return `<span class="status ${cls}">${s}</span>`;
+  }
+
+  function renderBookings(){
+    const tbody=$('#bookingsTbl tbody'); tbody.innerHTML='';
+    DB.bookings.forEach((b,i)=>{
+      const cust = DB.users.find(u=>u.id===b.customerId);
+      const partner = DB.users.find(u=>u.id===b.partnerId);
+      const tr=document.createElement('tr');
+      tr.innerHTML = `<td>${i+1}</td><td>${cust?.name||''}</td><td>${b.pickup} → ${b.drop}</td><td>${new Date(b.when).toLocaleString()}</td><td>${b.vehicleType}</td><td>${b.km}</td><td>₹${b.fare}</td><td>${statusChip(b.status)}</td><td>${partner?partner.name:'—'}</td><td>${assignCell(b)}</td>`;
+      tbody.appendChild(tr);
+      const sel = tr.querySelector('select'); if(sel){ sel.addEventListener('change',()=>{ b.partnerId = Number(sel.value)||null; b.status = b.partnerId? 'assigned':'new'; save(); }); }
+      const ssel = tr.querySelector('[data-status]'); if(ssel){ ssel.addEventListener('change',()=>{ b.status = ssel.value; save(); }); }
+    });
+  }
+  function assignCell(b){
+    const opts = DB.users.filter(u=>u.role==='partner');
+    const partnerOptions = ['<option value="">— Assign —</option>', ...opts.map(p=>`<option value="${p.id}" ${b.partnerId===p.id?'selected':''}>${p.name}</option>`)].join('');
+    const statusOptions = ['new','assigned','ontheway','completed','cancelled'].map(s=>`<option ${b.status===s?'selected':''} value="${s}">${s}</option>`).join('');
+    return `<div class="row"><select>${partnerOptions}</select><select data-status>${statusOptions}</select></div>`;
+  }
+
+  // settings
+  $('#saveFare').addEventListener('click',()=>{
+    DB.settings.baseFare = Number($('#baseFare').value||50);
+    DB.settings.perKm = Number($('#perKm').value||12);
+    DB.settings.surge = Number($('#surge').value||1);
+    save(); toast('Fare settings saved');
+  });
+  $('#exportData').addEventListener('click',()=>{
+    const blob=new Blob([JSON.stringify(DB,null,2)],{type:'application/json'});
+    const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='transpox-data.json'; a.click(); URL.revokeObjectURL(url);
+  });
+  $('#resetAll').addEventListener('click',()=>{ if(confirm('Reset all local data?')) storage.reset(); });
+
+  /******************** LIVE REFRESH ********************/
+  function refreshUI(){
+    if(state.user?.role==='customer') { showCustomerUI(); }
+    if(state.user?.role==='partner')  { showPartnerUI(); }
+    if(state.user?.role==='admin')    { showAdminUI(); }
+  }
+
+  // init
+  (function init(){
+    // route from hash
+    const hash = location.hash.replace('#','') || 'home'; showRoute(hash);
+    // prefill fare settings inputs
+    $('#baseFare').value = DB.settings.baseFare; $('#perKm').value = DB.settings.perKm; $('#surge').value = DB.settings.surge;
+    populateVehicleTypes();
+  })();
+  </script>
+</body>
+</html>
